@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Users,
   HeartHandshake,
@@ -13,6 +13,7 @@ import {
   Building2,
   Package,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -45,13 +46,46 @@ export default function PartnerPage() {
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const bankDetails = {
-    bankName: "First Bank of Nigeria",
-    accountName: "Mogaji Samuel Damilola",
-    accountNumber: "3113375029",
-  };
+  // Live Bank Settings from Database
+  const [bankDetails, setBankDetails] = useState({
+    bankName: "Loading...",
+    accountName: "The Refinery International",
+    accountNumber: "—",
+    primaryPhone: "+234 903 227 0825",
+    secondaryPhone: "+234 706 523 1908",
+  });
+  const [loadingConfig, setLoadingConfig] = useState(true);
+
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("*")
+          .eq("id", "primary_config")
+          .single();
+
+        if (!error && data) {
+          setBankDetails({
+            bankName: data.bank_name || "First Bank of Nigeria",
+            accountName: data.account_name || "The Refinery International",
+            accountNumber: data.account_number || "—",
+            primaryPhone: data.primary_phone || "+234 903 227 0825",
+            secondaryPhone: data.secondary_phone || "+234 706 523 1908",
+          });
+        }
+      } catch (err) {
+        console.error("Error loading bank settings:", err);
+      } finally {
+        setLoadingConfig(false);
+      }
+    }
+
+    loadConfig();
+  }, []);
 
   const handleCopyAccount = () => {
+    if (!bankDetails.accountNumber || bankDetails.accountNumber === "—") return;
     navigator.clipboard.writeText(bankDetails.accountNumber);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
@@ -105,10 +139,10 @@ export default function PartnerPage() {
         notes: "",
       });
       setFinancialPledge("");
-      setServiceProfessions(([]) as string[]);
-      setChurchSupport(([]) as string[]);
-      setCorporateSupport(([]) as string[]);
-      setResourceItems(([]) as string[]);
+      setServiceProfessions([]);
+      setChurchSupport([]);
+      setCorporateSupport([]);
+      setResourceItems([]);
     }
     setLoading(false);
   };
@@ -242,24 +276,31 @@ export default function PartnerPage() {
                     <div className="flex items-center gap-2 text-orange-400 text-xs font-bold uppercase tracking-wider">
                       <Sparkles size={14} /> Official Ministry Account for Transfers
                     </div>
-                    <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+                    <div className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
                       <div>
                         <span className="text-xs text-gray-400 block">Bank</span>
-                        <span className="font-bold">{bankDetails.bankName}</span>
+                        <span className="font-bold">
+                          {loadingConfig ? "Loading..." : bankDetails.bankName}
+                        </span>
                       </div>
                       <div>
                         <span className="text-xs text-gray-400 block">Account Name</span>
-                        <span className="font-bold text-orange-300">{bankDetails.accountName}</span>
+                        <span className="font-bold text-orange-300">
+                          {loadingConfig ? "Loading..." : bankDetails.accountName}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between sm:justify-start sm:gap-4">
                         <div>
                           <span className="text-xs text-gray-400 block">Account Number</span>
-                          <span className="font-mono font-black text-lg">{bankDetails.accountNumber}</span>
+                          <span className="font-mono font-black text-lg text-white">
+                            {loadingConfig ? "..." : bankDetails.accountNumber}
+                          </span>
                         </div>
                         <button
                           type="button"
                           onClick={handleCopyAccount}
-                          className="flex items-center gap-1 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-orange-600"
+                          disabled={loadingConfig || bankDetails.accountNumber === "—"}
+                          className="flex items-center gap-1 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-orange-600 disabled:opacity-50"
                         >
                           {copied ? <Check size={12} /> : <Copy size={12} />}
                           <span>{copied ? "Copied" : "Copy"}</span>
@@ -501,16 +542,16 @@ export default function PartnerPage() {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-4">
               <a
-                href="tel:+2349032270825"
+                href={`tel:${bankDetails.primaryPhone.replace(/\s+/g, '')}`}
                 className="rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
               >
-                📞 +234 903 227 0825
+                📞 {bankDetails.primaryPhone}
               </a>
               <a
-                href="tel:+2347065231908"
+                href={`tel:${bankDetails.secondaryPhone.replace(/\s+/g, '')}`}
                 className="rounded-xl bg-slate-800 border border-slate-700 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-700"
               >
-                📞 +234 706 523 1908
+                📞 {bankDetails.secondaryPhone}
               </a>
             </div>
           </div>

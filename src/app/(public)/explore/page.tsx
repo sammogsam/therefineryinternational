@@ -19,7 +19,8 @@ type Resource = {
   content: string | null;
   cover_image: string | null;
   event_name: string | null;
-  resource_date: string | null;
+  event_date?: string | null;
+  resource_date?: string | null;
   status: string;
   featured: boolean;
   type: string | null;
@@ -40,10 +41,10 @@ export default function ExplorePage() {
         .from("resources")
         .select("*")
         .eq("status", "Published")
-        .order("resource_date", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.error(error);
+        console.error("Error fetching explore resources:", error);
         setError(error.message);
         setLoading(false);
         return;
@@ -56,40 +57,45 @@ export default function ExplorePage() {
     loadResources();
   }, []);
 
-  function formatDate(date: string | null) {
+  function formatDate(date: string | null | undefined) {
     if (!date) return "";
-    return new Date(date + "T00:00:00").toLocaleDateString("en-GB", {
+    const cleanDate = date.includes("T") ? date.split("T")[0] : date;
+    return new Date(cleanDate + "T00:00:00").toLocaleDateString("en-GB", {
       day: "numeric",
-      month: "long",
+      month: "short",
       year: "numeric",
     });
   }
 
-  // Direct category matching with fallback keywords
-  const articles = resources.filter(
-    (r) =>
-      r.category?.toLowerCase() === "articles" ||
-      r.type?.toLowerCase() === "article"
-  );
+  // Robust category and keyword categorization
+  const articles = resources.filter((r) => {
+    const cat = r.category?.toLowerCase() || "";
+    const typ = r.type?.toLowerCase() || "";
+    return cat === "article" || cat === "articles" || cat === "teaching" || typ === "article";
+  });
 
-  const campMeetings = resources.filter(
-    (r) =>
-      r.category?.toLowerCase() === "camp meetings" ||
-      r.category?.toLowerCase() === "camp meeting" ||
-      r.title?.toLowerCase().includes("camp") ||
-      r.event_name?.toLowerCase().includes("camp")
-  );
+  const campMeetings = resources.filter((r) => {
+    const cat = r.category?.toLowerCase() || "";
+    const title = r.title?.toLowerCase() || "";
+    const evName = r.event_name?.toLowerCase() || "";
+    return cat === "camp" || cat === "camp meeting" || cat === "camp meetings" || title.includes("camp") || evName.includes("camp");
+  });
 
-  const outreaches = resources.filter(
-    (r) =>
-      r.category?.toLowerCase() === "outreaches" ||
-      r.category?.toLowerCase() === "outreach" ||
-      r.title?.toLowerCase().includes("outreach") ||
-      r.event_name?.toLowerCase().includes("outreach")
-  );
+  const outreaches = resources.filter((r) => {
+    const cat = r.category?.toLowerCase() || "";
+    const title = r.title?.toLowerCase() || "";
+    const evName = r.event_name?.toLowerCase() || "";
+    return (
+      cat === "outreach" ||
+      cat === "outreaches" ||
+      title.includes("outreach") ||
+      evName.includes("outreach")
+    );
+  });
 
   function EventAlbumCard({ resource }: { resource: Resource }) {
-    const isGallery = resource.type?.toLowerCase() === "gallery";
+    const isGallery = resource.type?.toLowerCase() === "gallery" || resource.type?.toLowerCase() === "photo";
+    const displayDate = resource.event_date || resource.resource_date;
 
     return (
       <article className="group flex flex-col overflow-hidden rounded-3xl border border-gray-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl">
@@ -124,10 +130,10 @@ export default function ExplorePage() {
         {/* Content */}
         <div className="flex flex-1 flex-col justify-between p-6">
           <div>
-            {resource.resource_date && (
-              <div className="flex items-center gap-1.5 text-xs font-medium text-orange-600">
+            {displayDate && (
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-orange-600">
                 <CalendarDays size={14} />
-                <span>{formatDate(resource.resource_date)}</span>
+                <span>{formatDate(displayDate)}</span>
               </div>
             )}
 
@@ -144,7 +150,7 @@ export default function ExplorePage() {
 
           <div className="mt-6 pt-4 border-t border-gray-100">
             <Link
-              href={`/explore/${resource.slug}`}
+              href={`/explore/${resource.slug || resource.id}`}
               className="inline-flex items-center gap-2 text-sm font-bold text-orange-600 hover:text-orange-700"
             >
               <span>{isGallery ? "Explore Album & Photos" : "Read Full Story"}</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CreditCard,
@@ -48,6 +48,14 @@ export default function SupportPage() {
   // In-Kind Material States
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [customMaterial, setCustomMaterial] = useState("");
+  const [materialOptions, setMaterialOptions] = useState<string[]>([
+    "Children Bibles & Devotionals",
+    "Storybooks & Christian Literature",
+    "Writing Materials & Stationery",
+    "Camp Welfare, Meals & Refreshments",
+    "Audio / Visual & Media Gear",
+    "Musical Instruments",
+  ]);
   const [materialContact, setMaterialContact] = useState({
     fullName: "",
     email: "",
@@ -70,26 +78,63 @@ export default function SupportPage() {
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const bankDetails = {
-    bankName: "First Bank of Nigeria",
-    accountName: "Mogaji Samuel Damilola",
-    accountNumber: "1432628624",
-  };
+  // Live Bank Settings from Database
+  const [bankDetails, setBankDetails] = useState({
+    bankName: "Loading Bank...",
+    accountName: "The Refinery International",
+    accountNumber: "—",
+    primaryPhone: "+234 903 227 0825",
+    secondaryPhone: "+234 706 523 1908",
+    primaryEmail: "therefineryinternational@gmail.com",
+  });
+  const [loadingConfig, setLoadingConfig] = useState(true);
+
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        // Load bank settings
+        const { data: config } = await supabase
+          .from("site_settings")
+          .select("*")
+          .eq("id", "primary_config")
+          .single();
+
+        if (config) {
+          setBankDetails({
+            bankName: config.bank_name || "First Bank of Nigeria",
+            accountName: config.account_name || "The Refinery International",
+            accountNumber: config.account_number || "—",
+            primaryPhone: config.primary_phone || "+234 903 227 0825",
+            secondaryPhone: config.secondary_phone || "+234 706 523 1908",
+            primaryEmail: config.primary_email || "therefineryinternational@gmail.com",
+          });
+        }
+
+        // Load needed materials checklist
+        const { data: mats } = await supabase
+          .from("needed_materials")
+          .select("name")
+          .order("created_at", { ascending: true });
+
+        if (mats && mats.length > 0) {
+          setMaterialOptions(mats.map((m) => m.name));
+        }
+      } catch (err) {
+        console.error("Error loading settings:", err);
+      } finally {
+        setLoadingConfig(false);
+      }
+    }
+
+    loadConfig();
+  }, []);
 
   const handleCopyAccount = () => {
+    if (!bankDetails.accountNumber || bankDetails.accountNumber === "—") return;
     navigator.clipboard.writeText(bankDetails.accountNumber);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
   };
-
-  const defaultMaterialOptions = [
-    "Children Bibles & Devotionals",
-    "Storybooks & Christian Literature",
-    "Writing Materials & Stationery",
-    "Camp Welfare, Meals & Refreshments",
-    "Audio / Visual & Media Gear",
-    "Musical Instruments",
-  ];
 
   const handleToggleMaterial = (item: string) => {
     if (selectedMaterials.includes(item)) {
@@ -497,26 +542,31 @@ export default function SupportPage() {
                     <div className="mx-auto mt-8 max-w-md rounded-2xl border border-slate-700 bg-slate-800/80 p-6 text-left">
                       <div className="flex justify-between border-b border-slate-700/80 pb-3">
                         <span className="text-xs uppercase tracking-wider text-gray-400">Bank Name</span>
-                        <span className="text-sm font-bold text-white">{bankDetails.bankName}</span>
+                        <span className="text-sm font-bold text-white">
+                          {loadingConfig ? "Loading..." : bankDetails.bankName}
+                        </span>
                       </div>
 
                       <div className="flex justify-between border-b border-slate-700/80 py-3">
                         <span className="text-xs uppercase tracking-wider text-gray-400">Account Name</span>
-                        <span className="text-sm font-bold text-orange-300">{bankDetails.accountName}</span>
+                        <span className="text-sm font-bold text-orange-300">
+                          {loadingConfig ? "Loading..." : bankDetails.accountName}
+                        </span>
                       </div>
 
                       <div className="mt-3 flex items-center justify-between pt-1">
                         <div>
                           <span className="block text-xs uppercase tracking-wider text-gray-400">Account Number</span>
                           <span className="font-mono text-2xl font-black tracking-wider text-white">
-                            {bankDetails.accountNumber}
+                            {loadingConfig ? "..." : bankDetails.accountNumber}
                           </span>
                         </div>
 
                         <button
                           type="button"
                           onClick={handleCopyAccount}
-                          className="flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-orange-600 active:scale-95"
+                          disabled={loadingConfig || bankDetails.accountNumber === "—"}
+                          className="flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-orange-600 active:scale-95 disabled:opacity-50"
                         >
                           {copied ? (
                             <>
@@ -534,12 +584,12 @@ export default function SupportPage() {
                     <div className="mt-8 rounded-2xl bg-slate-800/40 p-5 text-xs text-gray-400">
                       💡 After making a direct transfer, you may optionally send your confirmation note or transfer receipt to{" "}
                       <a
-                        href="https://mail.google.com/mail/?view=cm&fs=1&to=therefineryinternational@gmail.com"
+                        href={`https://mail.google.com/mail/?view=cm&fs=1&to=${bankDetails.primaryEmail}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-orange-400 underline hover:text-orange-300"
                       >
-                        therefineryinternational@gmail.com
+                        {bankDetails.primaryEmail}
                       </a>{" "}
                       for acknowledgment.
                     </div>
@@ -713,7 +763,7 @@ export default function SupportPage() {
                     Select Material Items You Wish to Supply:
                   </label>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    {defaultMaterialOptions.map((item) => (
+                    {materialOptions.map((item) => (
                       <button
                         type="button"
                         key={item}
@@ -849,11 +899,11 @@ export default function SupportPage() {
                   <PhoneCall size={24} className="text-orange-600" />
                   <h3 className="mt-3 text-base font-bold text-gray-900">Direct Phone Lines</h3>
                   <div className="mt-2 flex flex-col gap-1 text-sm font-semibold text-gray-700">
-                    <a href="tel:+2349032270825" className="hover:text-orange-600 transition">
-                      📞 +234 903 227 0825
+                    <a href={`tel:${bankDetails.primaryPhone.replace(/\s+/g, '')}`} className="hover:text-orange-600 transition">
+                      📞 {bankDetails.primaryPhone}
                     </a>
-                    <a href="tel:+2347065231908" className="hover:text-orange-600 transition">
-                      📞 +234 706 523 1908
+                    <a href={`tel:${bankDetails.secondaryPhone.replace(/\s+/g, '')}`} className="hover:text-orange-600 transition">
+                      📞 {bankDetails.secondaryPhone}
                     </a>
                   </div>
                 </div>
@@ -863,7 +913,7 @@ export default function SupportPage() {
                   <h3 className="mt-3 text-base font-bold text-gray-900">WhatsApp Discussion</h3>
                   <p className="mt-1 text-xs text-gray-600">Start an instant private chat with leadership:</p>
                   <a
-                    href="https://wa.me/2349032270825?text=Hello%20The%20Refinery%20International,%20I%20would%20like%20to%20discuss%20supporting%20the%20ministry."
+                    href={`https://wa.me/${bankDetails.primaryPhone.replace(/[^0-9]/g, '')}?text=Hello%20The%20Refinery%20International,%20I%20would%20like%20to%20discuss%20supporting%20the%20ministry.`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-green-700"
