@@ -61,10 +61,6 @@ export default function NewEventPage() {
 
       let imageUrl: string | null = null;
 
-      /*
-       * Upload flyer first
-       */
-
       if (flyer) {
         const fileExtension =
           flyer.name.split(".").pop()?.toLowerCase() || "jpg";
@@ -88,20 +84,12 @@ export default function NewEventPage() {
           return;
         }
 
-        /*
-         * Get public URL
-         */
-
         const { data } = supabase.storage
           .from("event-flyers")
           .getPublicUrl(filePath);
 
         imageUrl = data.publicUrl;
       }
-
-      /*
-       * Save event
-       */
 
       const { error } = await supabase
         .from("events")
@@ -150,32 +138,27 @@ export default function NewEventPage() {
     <main className="space-y-8">
 
       {/* Page Header */}
-
       <div>
-        <h1 className="text-4xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
           Create New Event
         </h1>
 
-        <p className="mt-2 text-gray-500">
+        <p className="mt-2 text-sm text-gray-500 sm:text-base">
           Fill in the details below to create a new ministry event.
         </p>
       </div>
 
-
       {/* Form */}
-
       <form
         onSubmit={handleSubmit}
-        className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm"
+        className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
       >
 
         <div className="grid gap-6 md:grid-cols-2">
 
           {/* Event Title */}
-
           <div className="md:col-span-2">
-
-            <label className="mb-2 block font-semibold">
+            <label className="mb-2 block font-semibold text-gray-900 text-sm sm:text-base">
               Event Title
             </label>
 
@@ -185,17 +168,13 @@ export default function NewEventPage() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Children's Leadership Conference"
               required
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-orange-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-orange-500"
             />
-
           </div>
 
-
           {/* Date */}
-
           <div>
-
-            <label className="mb-2 block font-semibold">
+            <label className="mb-2 block font-semibold text-gray-900 text-sm sm:text-base">
               Event Date
             </label>
 
@@ -204,17 +183,13 @@ export default function NewEventPage() {
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-orange-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-orange-500"
             />
-
           </div>
 
-
           {/* Time */}
-
           <div>
-
-            <label className="mb-2 block font-semibold">
+            <label className="mb-2 block font-semibold text-gray-900 text-sm sm:text-base">
               Time
             </label>
 
@@ -222,17 +197,13 @@ export default function NewEventPage() {
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-orange-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-orange-500"
             />
-
           </div>
 
-
           {/* Venue */}
-
           <div>
-
-            <label className="mb-2 block font-semibold">
+            <label className="mb-2 block font-semibold text-gray-900 text-sm sm:text-base">
               Venue
             </label>
 
@@ -242,17 +213,13 @@ export default function NewEventPage() {
               onChange={(e) => setVenue(e.target.value)}
               placeholder="EKSUTH Auditorium"
               required
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-orange-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-orange-500"
             />
-
           </div>
 
-
           {/* Speaker */}
-
           <div>
-
-            <label className="mb-2 block font-semibold">
+            <label className="mb-2 block font-semibold text-gray-900 text-sm sm:text-base">
               Speaker
             </label>
 
@@ -261,17 +228,13 @@ export default function NewEventPage() {
               value={speaker}
               onChange={(e) => setSpeaker(e.target.value)}
               placeholder="Pastor Samuel Mogaji"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-orange-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-orange-500"
             />
-
           </div>
 
-
           {/* Registration Link */}
-
           <div className="md:col-span-2">
-
-            <label className="mb-2 block font-semibold">
+            <label className="mb-2 block font-semibold text-gray-900 text-sm sm:text-base">
               Registration Link (Optional)
             </label>
 
@@ -280,17 +243,13 @@ export default function NewEventPage() {
               value={registrationLink}
               onChange={(e) => setRegistrationLink(e.target.value)}
               placeholder="https://..."
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-orange-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-orange-500"
             />
-
           </div>
 
-
           {/* Description */}
-
           <div className="md:col-span-2">
-
-            <label className="mb-2 block font-semibold">
+            <label className="mb-2 block font-semibold text-gray-900 text-sm sm:text-base">
               Event Description
             </label>
 
@@ -300,26 +259,19 @@ export default function NewEventPage() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Tell people about this event..."
               required
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-orange-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-orange-500"
             />
-
           </div>
 
-
           {/* Flyer Upload */}
-
           <div className="md:col-span-2">
-
-            <label className="mb-2 block font-semibold">
+            <label className="mb-2 block font-semibold text-gray-900 text-sm sm:text-base">
               Event Flyer
             </label>
 
-            <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-orange-50 p-8 text-center">
-
+            <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-orange-50 p-6 text-center sm:p-8">
               {previewUrl ? (
-
                 <div>
-
                   <img
                     src={previewUrl}
                     alt="Event flyer preview"
@@ -340,25 +292,19 @@ export default function NewEventPage() {
                   >
                     Remove Flyer
                   </button>
-
                 </div>
-
               ) : (
-
                 <>
-
-                  <p className="font-medium text-gray-700">
+                  <p className="font-medium text-gray-800">
                     Upload Event Flyer
                   </p>
 
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="mt-2 text-xs text-gray-500 sm:text-sm">
                     PNG, JPG, JPEG or WEBP • Maximum 5MB
                   </p>
 
-                  <label className="mt-5 inline-block cursor-pointer rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600">
-
+                  <label className="mt-5 inline-block cursor-pointer rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600 text-sm">
                     Choose Flyer
-
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
@@ -367,76 +313,47 @@ export default function NewEventPage() {
                       }
                       className="hidden"
                     />
-
                   </label>
-
                 </>
-
               )}
-
             </div>
-
           </div>
 
-
           {/* Status */}
-
           <div>
-
-            <label className="mb-2 block font-semibold">
+            <label className="mb-2 block font-semibold text-gray-900 text-sm sm:text-base">
               Status
             </label>
 
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-orange-500"
             >
-
-              <option value="Draft">
-                Draft
-              </option>
-
-              <option value="Published">
-                Published
-              </option>
-
+              <option value="Draft">Draft</option>
+              <option value="Published">Published</option>
             </select>
-
           </div>
 
-
           {/* Featured */}
-
           <div>
-
-            <label className="mb-2 block font-semibold">
+            <label className="mb-2 block font-semibold text-gray-900 text-sm sm:text-base">
               Featured Event
             </label>
 
             <select
               value={featured}
               onChange={(e) => setFeatured(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-orange-500"
             >
-
-              <option value="No">
-                No
-              </option>
-
-              <option value="Yes">
-                Yes
-              </option>
-
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
             </select>
-
           </div>
 
         </div>
 
-
         {/* Message */}
-
         {message && (
           <div
             className={`mt-6 rounded-xl px-4 py-3 text-sm ${
@@ -449,15 +366,12 @@ export default function NewEventPage() {
           </div>
         )}
 
-
         {/* Buttons */}
-
-        <div className="mt-10 flex gap-4">
-
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
           <button
             type="submit"
             disabled={loading}
-            className="rounded-xl bg-orange-500 px-8 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-xl bg-orange-500 px-8 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 text-sm sm:text-base"
           >
             {loading ? "Saving..." : "Save Event"}
           </button>
@@ -465,11 +379,10 @@ export default function NewEventPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="rounded-xl border border-gray-300 px-8 py-3 font-semibold hover:bg-gray-100"
+            className="rounded-xl border border-gray-300 bg-white px-8 py-3 font-semibold text-gray-700 hover:bg-gray-100 text-sm sm:text-base"
           >
             Cancel
           </button>
-
         </div>
 
       </form>
