@@ -1,67 +1,106 @@
-export default function Hero() {
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+
+export default function HomePage() {
+  const [heroMode, setHeroMode] = useState<"color" | "slideshow">("color");
+  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    async function loadHeroConfig() {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("hero_mode, hero_images")
+        .eq("id", "primary_config")
+        .single();
+
+      if (data) {
+        if (data.hero_mode) setHeroMode(data.hero_mode);
+        if (data.hero_images && Array.isArray(data.hero_images)) {
+          setHeroImages(data.hero_images);
+        }
+      }
+    }
+    loadHeroConfig();
+  }, []);
+
+  // Slideshow interval timer (changes every 5 seconds)
+  useEffect(() => {
+    if (heroMode === "slideshow" && heroImages.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [heroMode, heroImages]);
+
   return (
-    <section className="relative overflow-hidden bg-gray-950">
-      {/* Divine glow / refining fire atmosphere */}
-      <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-orange-500 opacity-30 blur-3xl md:h-96 md:w-96"></div>
-      <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-orange-400 opacity-20 blur-3xl md:h-96 md:w-96"></div>
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-950/40 to-gray-950"></div>
+    <div className="relative min-h-screen bg-slate-950 text-white flex flex-col justify-between overflow-hidden">
+      
+      {/* Background Layer: Slideshow or Solid Color */}
+      {heroMode === "slideshow" && heroImages.length > 0 ? (
+        <div className="absolute inset-0 z-0">
+          {heroImages.map((img, idx) => (
+            <div
+              key={idx}
+              className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
+                idx === currentImageIndex ? "opacity-100 scale-105" : "opacity-0 scale-100"
+              }`}
+              style={{ backgroundImage: `url(${img})`, transition: "opacity 1s ease-in-out, transform 6s ease-out" }}
+            />
+          ))}
+          {/* Dark Overlay so text remains readable */}
+          <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-[2px]" />
+        </div>
+      ) : (
+        /* Solid Theme Background */
+        <div className="absolute inset-0 z-0 bg-slate-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(249,115,22,0.15),rgba(255,255,255,0))]" />
+      )}
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6 py-24 text-center sm:py-32 md:py-40">
-        <p className="mb-5 text-xs font-semibold uppercase tracking-[0.3em] text-orange-400 sm:text-sm">
+      {/* Hero Content */}
+      <div className="relative z-10 mx-auto max-w-4xl px-6 py-28 text-center sm:py-36 my-auto space-y-6">
+        <span className="text-xs font-bold uppercase tracking-widest text-orange-400">
           A Place Where Children Encounter God
-        </p>
+        </span>
 
-        <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl md:text-7xl">
-          Where We Experience
-          <br />
-          the <span className="text-orange-400">DIVINE</span>,
-          <br />
-          and are indeed <span className="text-orange-400">Refined</span>.
+        <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl md:text-7xl leading-tight">
+          Where We Experience the <span className="text-orange-500">DIVINE</span>, and are indeed <span className="text-orange-400">Refined</span>.
         </h1>
 
-        <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-gray-300 sm:text-lg">
-          The Refinery International is a children's ministry committed to
-          raising children as lights and arrows — helping them encounter God,
-          discover their identity in Christ, and grow into their purpose.
+        <p className="mx-auto max-w-xl text-sm sm:text-base text-gray-300 leading-relaxed">
+          The Refinery International is a children&apos;s ministry committed to raising children as lights and arrows, helping them encounter God, discover their identity in Christ, and grow into their purpose.
         </p>
 
-        {/* 4 Distinct Aesthetic Buttons */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          
-          {/* 1. Explore (Solid Fire Glow) */}
-          <a
-            href="/explore"
-            className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 transition duration-300 hover:scale-105 hover:from-orange-600 hover:to-amber-600 sm:text-base"
+        <div className="pt-6 flex flex-wrap items-center justify-center gap-4">
+          <Link
+            href="/programs"
+            className="rounded-2xl bg-orange-500 hover:bg-orange-600 px-8 py-4 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition"
           >
             Explore The Refinery
-          </a>
-
-          {/* 2. Upcoming Events (Warm Amber Outline) */}
-          <a
+          </Link>
+          <Link
             href="/events"
-            className="group inline-flex items-center justify-center rounded-full border border-orange-400/80 bg-orange-950/30 px-7 py-3.5 text-sm font-semibold text-orange-300 backdrop-blur-md transition duration-300 hover:border-orange-300 hover:bg-orange-500/20 hover:text-white sm:text-base"
+            className="rounded-2xl border border-orange-500/40 bg-slate-900/80 hover:bg-slate-900 px-8 py-4 text-sm font-bold text-white transition"
           >
             Upcoming Events
-          </a>
-
-          {/* 3. Support Us (Heart/Seed Frosted Glass) */}
-          <a
+          </Link>
+          <Link
             href="/support"
-            className="group inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900/80 px-7 py-3.5 text-sm font-semibold text-slate-200 backdrop-blur-md transition duration-300 hover:border-amber-400 hover:bg-slate-800 hover:text-amber-300 sm:text-base"
+            className="rounded-2xl border border-slate-800 bg-slate-900/60 hover:bg-slate-900 px-8 py-4 text-sm font-bold text-gray-200 transition"
           >
             Support Us
-          </a>
-
-          {/* 4. Partner With Us (Crisp Clean Pearl Pill) */}
-          <a
+          </Link>
+          <Link
             href="/partner"
-            className="group inline-flex items-center justify-center rounded-full bg-white px-7 py-3.5 text-sm font-bold text-slate-950 shadow-md transition duration-300 hover:scale-105 hover:bg-orange-100 hover:text-orange-900 sm:text-base"
+            className="rounded-2xl bg-white hover:bg-gray-100 px-8 py-4 text-sm font-bold text-slate-950 transition"
           >
             Partner With Us
-          </a>
-
+          </Link>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

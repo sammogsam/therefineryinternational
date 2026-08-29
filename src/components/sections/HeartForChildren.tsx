@@ -25,7 +25,7 @@ export default function HeartForChildren() {
 
             Every child is precious in the sight of God and carries a
             unique purpose within His plan. At The Refinery International,
-            we believe children are not just the future — they are part of
+            we believe children are not just the future. They are part of
             God's kingdom today.
 
           </p>

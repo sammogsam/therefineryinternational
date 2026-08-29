@@ -34,6 +34,10 @@ export default function PartnerPage() {
   const [financialFrequency, setFinancialFrequency] = useState("Monthly Partner");
   const [financialPledge, setFinancialPledge] = useState("");
   
+  // Dynamic Program Selection State
+  const [upcomingPrograms, setUpcomingPrograms] = useState<string[]>([]);
+  const [selectedProgram, setSelectedProgram] = useState("");
+
   const [serviceProfessions, setServiceProfessions] = useState<string[]>([]);
   const [serviceOther, setServiceOther] = useState("");
 
@@ -46,7 +50,7 @@ export default function PartnerPage() {
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Live Bank Settings from Database
+  // Live Bank & Programs Settings from Database
   const [bankDetails, setBankDetails] = useState({
     bankName: "Loading...",
     accountName: "The Refinery International",
@@ -73,6 +77,11 @@ export default function PartnerPage() {
             primaryPhone: data.primary_phone || "+234 903 227 0825",
             secondaryPhone: data.secondary_phone || "+234 706 523 1908",
           });
+
+          if (data.upcoming_programs && Array.isArray(data.upcoming_programs) && data.upcoming_programs.length > 0) {
+            setUpcomingPrograms(data.upcoming_programs);
+            setSelectedProgram(data.upcoming_programs[0]);
+          }
         }
       } catch (err) {
         console.error("Error loading bank settings:", err);
@@ -104,6 +113,11 @@ export default function PartnerPage() {
     setLoading(true);
     setStatusMessage(null);
 
+    const targetProgramValue =
+      partnerType === "Financial" && financialFrequency === "Program Sponsor"
+        ? selectedProgram
+        : null;
+
     const { error } = await supabase.from("partnerships").insert([
       {
         partner_type: partnerType,
@@ -114,6 +128,7 @@ export default function PartnerPage() {
         city: formData.city || null,
         financial_frequency: partnerType === "Financial" ? financialFrequency : null,
         financial_pledge: partnerType === "Financial" && financialPledge ? parseFloat(financialPledge) : null,
+        target_program: targetProgramValue,
         service_professions: partnerType === "Service" ? serviceProfessions : null,
         service_other: partnerType === "Service" ? serviceOther : null,
         church_support_types: partnerType === "Church" ? churchSupport : null,
@@ -244,35 +259,81 @@ export default function PartnerPage() {
 
               {/* TRACK SPECIFIC SECTION */}
               {partnerType === "Financial" && (
-                <div className="rounded-2xl border border-orange-200 bg-orange-50/50 p-6 space-y-6">
-                  <h4 className="text-base font-bold text-gray-900">Financial Partnership Details</h4>
+                <div className="rounded-3xl border-2 border-orange-300 bg-gradient-to-br from-orange-50/80 to-amber-50/40 p-6 sm:p-8 space-y-6 shadow-md">
+                  <div className="flex items-center gap-3 border-b border-orange-200 pb-4">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-500 text-white font-bold shadow-sm">
+                      <ShieldCheck size={20} />
+                    </span>
+                    <div>
+                      <h4 className="text-lg font-extrabold text-gray-900">Financial Partnership Details</h4>
+                      <p className="text-xs text-orange-800 font-medium">Select your preferred giving category below.</p>
+                    </div>
+                  </div>
                   
+                  {/* Highly Visible Giving Category Dropdown */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700">Giving Category</label>
+                    <label className="block text-sm font-black uppercase tracking-wider text-orange-900 mb-2">
+                      Giving Category <span className="text-orange-600">*</span>
+                    </label>
                     <select
                       value={financialFrequency}
                       onChange={(e) => setFinancialFrequency(e.target.value)}
-                      className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 outline-none focus:border-orange-500 font-medium"
+                      className="w-full rounded-2xl border-2 border-orange-400 bg-white px-5 py-4 text-base font-extrabold text-gray-900 shadow-sm outline-none transition focus:border-orange-600 focus:ring-4 focus:ring-orange-500/20"
                     >
-                      <option value="Monthly Partner">Regular Monthly Partner</option>
-                      <option value="Program Sponsor">Specific Program / Camp Meeting Sponsor</option>
-                      <option value="One-Time Donor">One-Time Kingdom Builder / Donor</option>
+                      <option value="Monthly Partner">⭐ Regular Monthly Partner</option>
+                      <option value="Program Sponsor">⛺ Specific Program / Camp Meeting Sponsor</option>
+                      <option value="One-Time Donor">💎 One-Time Kingdom Builder / Donor</option>
                     </select>
                   </div>
 
+                  {/* Conditional Dynamic Dropdown for Upcoming Programs */}
+                  {financialFrequency === "Program Sponsor" && (
+                    <div className="rounded-2xl border-2 border-orange-400 bg-white p-5 shadow-sm space-y-3 transition-all animate-fadeIn">
+                      <label className="block text-xs font-black uppercase tracking-wider text-orange-900">
+                        Select Target Camp Meeting / Program *
+                      </label>
+                      {upcomingPrograms.length === 0 ? (
+                        <input
+                          type="text"
+                          required
+                          value={selectedProgram}
+                          onChange={(e) => setSelectedProgram(e.target.value)}
+                          placeholder="Enter specific camp meeting or outreach name..."
+                          className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3.5 text-sm font-bold text-gray-900 outline-none focus:border-orange-500"
+                        />
+                      ) : (
+                        <select
+                          required
+                          value={selectedProgram}
+                          onChange={(e) => setSelectedProgram(e.target.value)}
+                          className="w-full rounded-xl border-2 border-orange-400 bg-orange-50/50 px-4 py-3.5 text-sm font-black text-gray-900 outline-none focus:border-orange-600"
+                        >
+                          {upcomingPrograms.map((programName, i) => (
+                            <option key={i} value={programName}>
+                              📍 {programName}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <p className="text-xs text-gray-600 font-medium">
+                        Your sponsorship will be allocated specifically to this meeting.
+                      </p>
+                    </div>
+                  )}
+
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700">Committed Amount (₦) - Optional</label>
+                    <label className="block text-sm font-bold text-gray-800">Committed Amount (₦) - Optional</label>
                     <input
                       type="number"
                       value={financialPledge}
                       onChange={(e) => setFinancialPledge(e.target.value)}
                       placeholder="e.g. 25000"
-                      className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 outline-none focus:border-orange-500"
+                      className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 outline-none focus:border-orange-500 font-semibold"
                     />
                   </div>
 
-                  {/* Direct Bank Placard Toggle */}
-                  <div className="rounded-xl bg-slate-900 p-6 text-white">
+                  {/* Direct Bank Placard */}
+                  <div className="rounded-2xl bg-slate-900 p-6 text-white shadow-lg">
                     <div className="flex items-center gap-2 text-orange-400 text-xs font-bold uppercase tracking-wider">
                       <Sparkles size={14} /> Official Ministry Account for Transfers
                     </div>

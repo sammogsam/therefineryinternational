@@ -12,7 +12,9 @@ import {
   CreditCard,
   Bell,
   RefreshCw,
-  Clock
+  Clock,
+  ExternalLink,
+  FileCheck
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -27,9 +29,11 @@ type SupportPledge = {
   material_items: string[] | null;
   material_other: string | null;
   pledge_amount: number | null;
-  payment_status: string; // 'Pledged', 'Direct Transfer', 'Fulfilled'
+  payment_status: string; // 'Pledged', 'Direct Transfer', 'Fulfilled', 'Transferred / Completed'
   fulfillment_date: string | null;
   subscribe_reminders: boolean;
+  wants_reminder?: boolean;
+  receipt_url?: string | null;
   notes: string | null;
   created_at: string;
 };
@@ -83,7 +87,8 @@ export default function AdminSupportPledges() {
   const filteredPledges = pledges.filter((item) => {
     const matchesFilter =
       filterType === "all" ||
-      (filterType === "direct" && item.support_type === "Direct Transfer") ||
+      (filterType === "direct" && item.support_type?.toLowerCase().includes("direct")) ||
+      (filterType === "receipts" && Boolean(item.receipt_url)) ||
       (filterType === "pledge" && item.support_type === "Financial Pledge") ||
       (filterType === "materials" && item.support_type?.includes("Material"));
 
@@ -103,7 +108,7 @@ export default function AdminSupportPledges() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Support & Giving Submissions</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Track direct bank transfers, scheduled pledges, and in-kind material contributions.
+            Track direct bank transfers, uploaded payment receipts, scheduled pledges, and in-kind material contributions.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -139,6 +144,7 @@ export default function AdminSupportPledges() {
           {[
             { id: "all", label: "All Giving" },
             { id: "direct", label: "Direct Transfers" },
+            { id: "receipts", label: "With Receipts" },
             { id: "pledge", label: "Pledges" },
             { id: "materials", label: "Materials" },
           ].map((tab) => (
@@ -178,14 +184,14 @@ export default function AdminSupportPledges() {
                     {/* Support Type Tag */}
                     <span
                       className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold ${
-                        item.support_type === "Direct Transfer"
+                        item.support_type?.includes("Direct")
                           ? "bg-purple-100 text-purple-800"
                           : item.support_type?.includes("Financial")
                           ? "bg-emerald-100 text-emerald-800"
                           : "bg-blue-100 text-blue-800"
                       }`}
                     >
-                      {item.support_type === "Direct Transfer" && <CreditCard size={12} />}
+                      {item.support_type?.includes("Direct") && <CreditCard size={12} />}
                       {item.support_type === "Financial Pledge" && <Heart size={12} />}
                       {item.support_type?.includes("Material") && <Package size={12} />}
                       {item.support_type || "Contribution"}
@@ -205,10 +211,18 @@ export default function AdminSupportPledges() {
                       </span>
                     )}
 
-                    {/* Email Reminder Opt-in */}
-                    {item.subscribe_reminders && (
-                      <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-                        <Bell size={11} /> Subscribed to Updates
+                    {/* Reminder Requested Tag */}
+                    {(item.wants_reminder || item.subscribe_reminders) && (
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200/80 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                        <Bell size={11} className="text-amber-600" /> 
+                        {item.wants_reminder ? "Reminder Requested" : "Subscribed to Updates"}
+                      </span>
+                    )}
+
+                    {/* Receipt Tag */}
+                    {item.receipt_url && (
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-bold text-emerald-700">
+                        <FileCheck size={12} /> Receipt Attached
                       </span>
                     )}
                   </div>
@@ -219,8 +233,8 @@ export default function AdminSupportPledges() {
 
                   <div className="mt-2 flex flex-wrap gap-4 text-xs font-medium text-gray-600">
                     {item.phone && (
-                      <span className="flex items-center gap-1">
-                        <Phone size={13} className="text-gray-400" /> {item.phone}
+                      <span className="flex items-center gap-1 font-mono font-semibold text-gray-800">
+                        <Phone size={13} className="text-orange-500" /> {item.phone}
                       </span>
                     )}
                     {item.email && (
@@ -244,12 +258,12 @@ export default function AdminSupportPledges() {
                   </div>
                 </div>
 
-                {/* Status & Amount Control */}
+                {/* Status, Amount & Receipt Actions */}
                 <div className="flex flex-row items-center justify-between gap-3 border-t border-gray-100 pt-3 md:flex-col md:items-end md:border-none md:pt-0">
                   {item.pledge_amount ? (
                     <div className="text-right">
                       <span className="text-xs text-gray-400 block">
-                        {item.support_type === "Direct Transfer" ? "Transferred / Estimated" : "Pledge Amount"}
+                        {item.support_type?.includes("Direct") ? "Transferred / Estimated" : "Pledge Amount"}
                       </span>
                       <span className="text-xl font-extrabold text-emerald-600">
                         ₦{item.pledge_amount.toLocaleString()}
@@ -257,13 +271,28 @@ export default function AdminSupportPledges() {
                     </div>
                   ) : null}
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* View Proof of Payment */}
+                    {item.receipt_url && (
+                      <a
+                        href={item.receipt_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:text-orange-600"
+                        title="Open receipt in new tab"
+                      >
+                        <ExternalLink size={13} />
+                        <span>View Receipt</span>
+                      </a>
+                    )}
+
                     <select
                       value={item.payment_status || "Pledged"}
                       onChange={(e) => updateStatus(item.id, e.target.value)}
                       className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-orange-500"
                     >
                       <option value="Direct Transfer">💳 Direct Transfer</option>
+                      <option value="Transferred / Completed">✅ Transferred / Completed</option>
                       <option value="Pledged">⏳ Pledged</option>
                       <option value="Pending">⏳ Pending</option>
                       <option value="Fulfilled">✅ Fulfilled / Confirmed</option>

@@ -4,13 +4,16 @@ import { useEffect, useState } from "react";
 import { 
   Building2, 
   Phone, 
-  Mail, 
   Lock, 
   Save, 
-  CheckCircle2, 
   ShieldCheck,
   PackagePlus,
-  Trash2
+  Trash2,
+  Calendar,
+  Plus,
+  Image as ImageIcon,
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -38,11 +41,19 @@ export default function AdminSettings() {
   const [materials, setMaterials] = useState<{ id: string; name: string; is_active: boolean }[]>([]);
   const [newMaterialName, setNewMaterialName] = useState("");
 
+  // Upcoming Programs Manager State
+  const [programs, setPrograms] = useState<string[]>([]);
+  const [newProgramInput, setNewProgramInput] = useState("");
+
+  // Hero Slideshow State
+  const [heroMode, setHeroMode] = useState<"color" | "slideshow">("color");
+  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [uploadingHero, setUploadingHero] = useState(false);
+
   useEffect(() => {
     async function loadSettings() {
       setLoading(true);
 
-      // Load Site Settings
       const { data: config } = await supabase
         .from("site_settings")
         .select("*")
@@ -58,9 +69,21 @@ export default function AdminSettings() {
           primaryPhone: config.primary_phone || "+234 903 227 0825",
           secondaryPhone: config.secondary_phone || "+234 706 523 1908",
         });
+
+        if (config.upcoming_programs && Array.isArray(config.upcoming_programs)) {
+          setPrograms(config.upcoming_programs);
+        } else {
+          setPrograms([
+            "Ikere Ekiti Children Camp Meeting 2026",
+            "Annual Scripture & Bible Distribution Outreach",
+            "Secondary School Assembly Missions",
+          ]);
+        }
+
+        setHeroMode(config.hero_mode || "color");
+        setHeroImages(config.hero_images || []);
       }
 
-      // Load Materials
       const { data: mats } = await supabase
         .from("needed_materials")
         .select("*")
@@ -76,7 +99,7 @@ export default function AdminSettings() {
     loadSettings();
   }, []);
 
-  // Save General & Bank Config
+  // Save General, Bank, Programs & Hero Config
   const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -90,6 +113,9 @@ export default function AdminSettings() {
       primary_email: bankSettings.primaryEmail,
       primary_phone: bankSettings.primaryPhone,
       secondary_phone: bankSettings.secondaryPhone,
+      upcoming_programs: programs,
+      hero_mode: heroMode,
+      hero_images: heroImages,
       updated_at: new Date().toISOString(),
     });
 
@@ -99,6 +125,39 @@ export default function AdminSettings() {
       setStatus({ type: "success", text: "Settings saved and updated across public pages!" });
     }
     setSaving(false);
+  };
+
+  // Handle Hero Image Upload
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingHero(true);
+    const newUrls: string[] = [...heroImages];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileExt = file.name.split(".").pop();
+      const filePath = `hero/${Date.now()}-${i}.${fileExt}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("resource-images")
+        .upload(filePath, file);
+
+      if (!uploadErr) {
+        const { data } = supabase.storage
+          .from("resource-images")
+          .getPublicUrl(filePath);
+        newUrls.push(data.publicUrl);
+      }
+    }
+
+    setHeroImages(newUrls);
+    setUploadingHero(false);
+  };
+
+  const handleRemoveHeroImage = (index: number) => {
+    setHeroImages(heroImages.filter((_, i) => i !== index));
   };
 
   // Update Admin Password
@@ -141,12 +200,22 @@ export default function AdminSettings() {
     }
   };
 
-  // Delete Needed Material
   const handleDeleteMaterial = async (id: string) => {
     const { error } = await supabase.from("needed_materials").delete().eq("id", id);
     if (!error) {
       setMaterials(materials.filter((m) => m.id !== id));
     }
+  };
+
+  const handleAddProgram = () => {
+    const trimmed = newProgramInput.trim();
+    if (!trimmed || programs.includes(trimmed)) return;
+    setPrograms([...programs, trimmed]);
+    setNewProgramInput("");
+  };
+
+  const handleRemoveProgram = (index: number) => {
+    setPrograms(programs.filter((_, i) => i !== index));
   };
 
   if (loading) {
@@ -158,7 +227,7 @@ export default function AdminSettings() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Manage donation placards, contact channels, needed material checklists, and security.
+          Manage homepage hero background, donation placards, programs, checklists, and security.
         </p>
       </div>
 
@@ -168,8 +237,83 @@ export default function AdminSettings() {
         </div>
       )}
 
-      {/* 1. BANK & GIVING PLACARD SETTINGS */}
       <form onSubmit={handleSaveConfig} className="mt-8 space-y-8">
+        {/* 1. HOMEPAGE HERO BACKGROUND SETTINGS */}
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm space-y-6">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-5">
+            <ImageIcon className="text-orange-500" size={24} />
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Homepage Hero Background</h2>
+              <p className="text-xs text-gray-500">Choose between the solid dark theme or a rotating photo slideshow.</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
+              Hero Background Mode
+            </label>
+            <select
+              value={heroMode}
+              onChange={(e) => setHeroMode(e.target.value as any)}
+              className="w-full sm:w-72 rounded-xl border border-gray-300 px-4 py-3 text-sm font-bold outline-none focus:border-orange-500"
+            >
+              <option value="color">Solid Color Theme (Default)</option>
+              <option value="slideshow">Rotating Image Slideshow</option>
+            </select>
+          </div>
+
+          {heroMode === "slideshow" && (
+            <div className="space-y-4 pt-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                Slideshow Photos ({heroImages.length})
+              </label>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {heroImages.map((url, idx) => (
+                  <div key={idx} className="relative group rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 h-28">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveHeroImage(idx)}
+                      className="absolute top-2 right-2 rounded-xl bg-red-600 p-1.5 text-white opacity-0 group-hover:opacity-100 transition"
+                      title="Remove image"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-orange-50/50 p-6 text-center">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleHeroImageUpload}
+                  className="mx-auto block text-xs text-gray-500 file:mr-4 file:rounded-xl file:border-0 file:bg-orange-500 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-orange-600 cursor-pointer"
+                />
+                {uploadingHero && (
+                  <p className="mt-2 text-xs font-semibold text-orange-600 flex items-center justify-center gap-1.5">
+                    <Loader2 size={14} className="animate-spin" /> Uploading photos...
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-4">
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex items-center gap-2 rounded-2xl bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-orange-600 disabled:opacity-50"
+            >
+              <Save size={16} />
+              <span>{saving ? "Saving Changes..." : "Save Settings"}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 2. BANK & GIVING PLACARD SETTINGS */}
         <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
           <div className="flex items-center gap-3 border-b border-gray-100 pb-5">
             <Building2 className="text-orange-500" size={24} />
@@ -189,7 +333,6 @@ export default function AdminSettings() {
                 className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 font-medium"
               />
             </div>
-
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Account Name</label>
               <input
@@ -199,7 +342,6 @@ export default function AdminSettings() {
                 className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 font-medium"
               />
             </div>
-
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Account Number</label>
               <input
@@ -212,62 +354,55 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        {/* 2. CONTACT INFORMATION SETTINGS */}
+        {/* 3. UPCOMING PROGRAMS MANAGER */}
         <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
           <div className="flex items-center gap-3 border-b border-gray-100 pb-5">
-            <Phone className="text-orange-500" size={24} />
+            <Calendar className="text-orange-500" size={24} />
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Official Ministry Contact Details</h2>
-              <p className="text-xs text-gray-500">Used across contact cards, emails, and consultation modals.</p>
+              <h2 className="text-lg font-bold text-gray-900">Upcoming Programs & Camp Meetings</h2>
+              <p className="text-xs text-gray-500">These populate the dropdown list on the Partner page.</p>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-6 sm:grid-cols-3">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Primary Email</label>
-              <input
-                type="email"
-                value={bankSettings.primaryEmail}
-                onChange={(e) => setBankSettings({ ...bankSettings, primaryEmail: e.target.value })}
-                className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 font-medium"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Primary Phone / WhatsApp</label>
-              <input
-                type="text"
-                value={bankSettings.primaryPhone}
-                onChange={(e) => setBankSettings({ ...bankSettings, primaryPhone: e.target.value })}
-                className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 font-medium"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Secondary Phone</label>
-              <input
-                type="text"
-                value={bankSettings.secondaryPhone}
-                onChange={(e) => setBankSettings({ ...bankSettings, secondaryPhone: e.target.value })}
-                className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 font-medium"
-              />
-            </div>
+          <div className="mt-6 space-y-2">
+            {programs.map((prog, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-800"
+              >
+                <span>📍 {prog}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveProgram(index)}
+                  className="text-gray-400 hover:text-red-600 transition"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
           </div>
 
-          <div className="mt-6 flex justify-end">
+          <div className="mt-4 flex gap-2">
+            <input
+              type="text"
+              value={newProgramInput}
+              onChange={(e) => setNewProgramInput(e.target.value)}
+              placeholder="Add new camp meeting or outreach program..."
+              className="flex-1 rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500"
+            />
             <button
-              type="submit"
-              disabled={saving}
-              className="flex items-center gap-2 rounded-2xl bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-orange-600 disabled:opacity-50"
+              type="button"
+              onClick={handleAddProgram}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800"
             >
-              <Save size={16} />
-              <span>{saving ? "Saving Changes..." : "Save Public Settings"}</span>
+              <Plus size={14} />
+              <span>Add Program</span>
             </button>
           </div>
         </div>
       </form>
 
-      {/* 3. NEEDED MATERIALS CHECKLIST MANAGER */}
+      {/* 4. NEEDED MATERIALS MANAGER */}
       <div className="mt-8 rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
         <div className="flex items-center gap-3 border-b border-gray-100 pb-5">
           <PackagePlus className="text-orange-500" size={24} />
@@ -282,7 +417,7 @@ export default function AdminSettings() {
             type="text"
             value={newMaterialName}
             onChange={(e) => setNewMaterialName(e.target.value)}
-            placeholder="Add new material requirement (e.g. 50 Sleeping Mats)..."
+            placeholder="Add new material requirement..."
             className="flex-1 rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500"
           />
           <button
@@ -313,7 +448,7 @@ export default function AdminSettings() {
         </div>
       </div>
 
-      {/* 4. ADMIN CREDENTIALS & SECURITY */}
+      {/* 5. ADMIN PASSWORD */}
       <div className="mt-8 rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
         <div className="flex items-center gap-3 border-b border-gray-100 pb-5">
           <ShieldCheck className="text-orange-500" size={24} />
@@ -340,7 +475,6 @@ export default function AdminSettings() {
               className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500"
             />
           </div>
-
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Confirm Password</label>
             <input
@@ -351,7 +485,6 @@ export default function AdminSettings() {
               className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500"
             />
           </div>
-
           <div className="sm:col-span-2 flex justify-end">
             <button
               type="submit"

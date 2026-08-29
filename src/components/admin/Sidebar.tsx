@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarDays,
+  CalendarCheck,
   FileText,
   Users,
   UserPlus,
@@ -46,6 +47,11 @@ export default function Sidebar() {
       name: "Resources",
       href: "/admin/resources",
       icon: FileText,
+    },
+    {
+      name: "Camp & Outreach Setup",
+      href: "/admin/camp",
+      icon: CalendarCheck,
     },
     {
       name: "Team Applications",

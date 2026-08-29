@@ -50,7 +50,7 @@ export default function Footer() {
               />
             </Link>
             <p className="mt-5 max-w-sm text-gray-400">
-              Raising children as lights and arrows — helping them
+              Raising children as lights and arrows, helping them
               encounter God, discover their identity in Christ,
               and grow into their purpose.
             </p>
@@ -64,11 +64,15 @@ export default function Footer() {
               <Link href="/about" className="transition hover:text-orange-400">About Us</Link>
               <Link href="/programs" className="transition hover:text-orange-400">Programs</Link>
               <Link href="/events" className="transition hover:text-orange-400">Events</Link>
+              <Link href="/explore" className="transition hover:text-orange-400">Explore</Link>
               <Link href="/support" className="transition hover:text-orange-400">Support</Link>
               <Link href="/partner" className="transition hover:text-orange-400">Partner With Us</Link>
               <Link href="/join-team" className="transition hover:text-orange-400">Join Us</Link>
               <Link href="/socials" className="transition hover:text-orange-400">Socials</Link>
               <Link href="/contact" className="transition hover:text-orange-400">Contact</Link>
+              <Link href="/team/login" className="pt-2 text-xs font-bold text-orange-500 hover:text-orange-400 transition">
+                Team Portal Login
+              </Link>
             </div>
           </div>
 
