@@ -38,7 +38,7 @@ export default function HomePage() {
   }, [heroMode, heroImages]);
 
   return (
-    <div className="relative min-h-screen bg-slate-950 text-white flex flex-col justify-between overflow-hidden">
+    <div className="relative min-h-[85vh] bg-slate-950 text-white flex flex-col justify-center overflow-hidden">
       
       {/* Background Layer: Slideshow or Solid Color */}
       {heroMode === "slideshow" && heroImages.length > 0 ? (
@@ -61,41 +61,41 @@ export default function HomePage() {
       )}
 
       {/* Hero Content */}
-      <div className="relative z-10 mx-auto max-w-4xl px-6 py-28 text-center sm:py-36 my-auto space-y-6">
-        <span className="text-xs font-bold uppercase tracking-widest text-orange-400">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24 md:py-32 text-center space-y-4 sm:space-y-6">
+        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-orange-400">
           A Place Where Children Encounter God
         </span>
 
-        <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl md:text-7xl leading-tight">
+        <h1 className="text-3xl font-extrabold tracking-tight sm:text-6xl md:text-7xl leading-tight">
           Where We Experience the <span className="text-orange-500">DIVINE</span>, and are indeed <span className="text-orange-400">Refined</span>.
         </h1>
 
-        <p className="mx-auto max-w-xl text-sm sm:text-base text-gray-300 leading-relaxed">
+        <p className="mx-auto max-w-xl text-xs sm:text-base text-gray-300 leading-relaxed px-2">
           The Refinery International is a children&apos;s ministry committed to raising children as lights and arrows, helping them encounter God, discover their identity in Christ, and grow into their purpose.
         </p>
 
-        <div className="pt-6 flex flex-wrap items-center justify-center gap-4">
+        <div className="pt-4 sm:pt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           <Link
             href="/programs"
-            className="rounded-2xl bg-orange-500 hover:bg-orange-600 px-8 py-4 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition"
+            className="rounded-2xl bg-orange-500 hover:bg-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition"
           >
             Explore The Refinery
           </Link>
           <Link
             href="/events"
-            className="rounded-2xl border border-orange-500/40 bg-slate-900/80 hover:bg-slate-900 px-8 py-4 text-sm font-bold text-white transition"
+            className="rounded-2xl border border-orange-500/40 bg-slate-900/80 hover:bg-slate-900 px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold text-white transition"
           >
             Upcoming Events
           </Link>
           <Link
             href="/support"
-            className="rounded-2xl border border-slate-800 bg-slate-900/60 hover:bg-slate-900 px-8 py-4 text-sm font-bold text-gray-200 transition"
+            className="rounded-2xl border border-slate-800 bg-slate-900/60 hover:bg-slate-900 px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold text-gray-200 transition"
           >
             Support Us
           </Link>
           <Link
             href="/partner"
-            className="rounded-2xl bg-white hover:bg-gray-100 px-8 py-4 text-sm font-bold text-slate-950 transition"
+            className="rounded-2xl bg-white hover:bg-gray-100 px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold text-slate-950 transition"
           >
             Partner With Us
           </Link>
