@@ -17,7 +17,7 @@ export default function AdminLayout({
 
       {/* Desktop Sidebar */}
       <div className="hidden md:block md:w-64 md:shrink-0">
-        <div className="fixed inset-y-0 z-30 w-64">
+        <div className="fixed inset-y-0 z-30 w-64 overflow-y-auto">
           <Sidebar />
         </div>
       </div>
@@ -31,7 +31,7 @@ export default function AdminLayout({
             onClick={() => setMobileMenuOpen(false)}
           />
           {/* Sidebar Drawer */}
-          <div className="relative flex w-64 flex-col bg-slate-950 text-white z-10">
+          <div className="relative flex w-64 flex-col bg-slate-950 text-white z-10 overflow-y-auto">
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="absolute right-4 top-4 rounded-lg p-1.5 text-gray-400 hover:bg-slate-800 hover:text-white"
