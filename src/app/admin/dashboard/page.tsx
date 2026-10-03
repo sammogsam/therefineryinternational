@@ -12,6 +12,7 @@ import {
   BookOpen,
   Image as ImageIcon,
   ArrowRight,
+  ClipboardCheck,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -24,6 +25,7 @@ type DashboardCounts = {
   eventsCount: number;
   articlesCount: number;
   galleryPhotosCount: number;
+  customFormsCount: number;
 };
 
 type RecentItem = {
@@ -50,6 +52,7 @@ export default function AdminDashboard() {
     eventsCount: 0,
     articlesCount: 0,
     galleryPhotosCount: 0,
+    customFormsCount: 0,
   });
 
   const [recentApplications, setRecentApplications] = useState<RecentItem[]>([]);
@@ -61,7 +64,6 @@ export default function AdminDashboard() {
       setLoading(true);
 
       try {
-        // 1. Live Table Counts
         const [
           { count: supportCount },
           { count: partnersCount },
@@ -69,6 +71,7 @@ export default function AdminDashboard() {
           { count: teamCount },
           { count: volunteerCount },
           { count: eventsCount },
+          { count: formsCount },
         ] = await Promise.all([
           supabase.from("support_pledges").select("*", { count: "exact", head: true }),
           supabase.from("partnerships").select("*", { count: "exact", head: true }),
@@ -76,9 +79,9 @@ export default function AdminDashboard() {
           supabase.from("team_applications").select("*", { count: "exact", head: true }),
           supabase.from("volunteer_applications").select("*", { count: "exact", head: true }),
           supabase.from("events").select("*", { count: "exact", head: true }),
+          supabase.from("admin_custom_forms").select("*", { count: "exact", head: true }),
         ]);
 
-        // 2. Fetch Resources to compute exact Articles & Photo counts
         const { data: resourcesData } = await supabase
           .from("resources")
           .select("category, type, cover_image, gallery_images")
@@ -111,9 +114,9 @@ export default function AdminDashboard() {
           eventsCount: eventsCount || 0,
           articlesCount: articles,
           galleryPhotosCount: totalImages,
+          customFormsCount: formsCount || 0,
         });
 
-        // 3. Fetch Recent Applications / Inquiries
         const [recentTeam, recentVolunteers] = await Promise.all([
           supabase
             .from("team_applications")
@@ -148,7 +151,6 @@ export default function AdminDashboard() {
 
         setRecentApplications(combinedRecent);
 
-        // 4. Fetch Upcoming Events
         const { data: eventsList } = await supabase
           .from("events")
           .select("id, title, event_date")
@@ -190,6 +192,13 @@ export default function AdminDashboard() {
       href: "/admin/messages",
     },
     {
+      title: "Team Forms",
+      value: counts.customFormsCount,
+      subtext: "Active custom questionnaires",
+      icon: ClipboardCheck,
+      href: "/admin/forms/manage",
+    },
+    {
       title: "Team Applications",
       value: counts.teamApplications,
       subtext: "Core ministry applicants",
@@ -215,13 +224,6 @@ export default function AdminDashboard() {
       value: counts.articlesCount,
       subtext: "Published teachings",
       icon: BookOpen,
-      href: "/admin/resources",
-    },
-    {
-      title: "Gallery",
-      value: counts.galleryPhotosCount,
-      subtext: "Photos in albums",
-      icon: ImageIcon,
       href: "/admin/resources",
     },
   ];

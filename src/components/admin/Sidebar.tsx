@@ -15,6 +15,8 @@ import {
   LogOut,
   HeartHandshake,
   Handshake,
+  ClipboardCheck,
+  ContactRound,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -52,6 +54,21 @@ export default function Sidebar() {
       name: "Camp & Outreach Setup",
       href: "/admin/camp",
       icon: CalendarCheck,
+    },
+    {
+      name: "Create Team Form",
+      href: "/admin/forms/create",
+      icon: ClipboardCheck,
+    },
+    {
+      name: "View Form Submissions",
+      href: "/admin/forms/manage",
+      icon: Users,
+    },
+    {
+      name: "Team Biodata Directory",
+      href: "/admin/team/biodata",
+      icon: ContactRound,
     },
     {
       name: "Team Applications",
