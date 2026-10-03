@@ -17,7 +17,7 @@ export default function TeamMembershipFormPage() {
   const [path, setPath] = useState<"returning" | "new" | null>(null);
   const [step, setStep] = useState<number>(0);
 
-  // Form State (Email starts blank)
+  // Form State
   const [form, setForm] = useState({
     fullName: "",
     preferredName: "",
@@ -52,28 +52,27 @@ export default function TeamMembershipFormPage() {
   useEffect(() => {
     async function init() {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/team/login");
-        return;
-      }
-      setUser(session.user);
-      // Leaves email blank so it won't auto-fill with logged-in account email
-      setForm((prev) => ({ ...prev, emailAddress: "" }));
+      
+      // If user is logged in, grab their details & check if already submitted
+      if (session) {
+        setUser(session.user);
+        setForm((prev) => ({ ...prev, emailAddress: session.user.email || "" }));
 
-      // Check if already submitted
-      const { data: existing } = await supabase
-        .from("team_membership_records")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .single();
+        const { data: existing } = await supabase
+          .from("team_membership_records")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single();
 
-      if (existing) {
-        setAlreadySubmitted(true);
+        if (existing) {
+          setAlreadySubmitted(true);
+        }
       }
+      
       setCheckingExisting(false);
     }
     init();
-  }, [router]);
+  }, []);
 
   function handleCheckboxToggle(item: string) {
     const exists = form.understandings.includes(item);
@@ -118,7 +117,6 @@ export default function TeamMembershipFormPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user?.id) return;
 
     const isDroppingOut = form.continuationDecision.includes("No, I do not wish");
     if (!isDroppingOut && !form.attestation) {
@@ -131,7 +129,7 @@ export default function TeamMembershipFormPage() {
 
     const { error } = await supabase.from("team_membership_records").insert([
       {
-        user_id: user.id,
+        user_id: user?.id || null,
         full_name: form.fullName,
         preferred_name: form.preferredName,
         date_of_birth: form.dateOfBirth || null,
@@ -148,6 +146,7 @@ export default function TeamMembershipFormPage() {
         commitment_willingness: isDroppingOut ? "N/A" : form.commitmentWillingness,
         understandings: isDroppingOut ? [] : form.understandings,
         attestation: isDroppingOut ? "No" : form.attestation,
+        is_approved: false, // Starts as pending until admin approves
       },
     ]);
 
