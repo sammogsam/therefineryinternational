@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-export default function HomePage() {
+export default function Hero() {
   const [heroMode, setHeroMode] = useState<"color" | "slideshow">("color");
   const [heroImages, setHeroImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -38,7 +38,7 @@ export default function HomePage() {
   }, [heroMode, heroImages]);
 
   return (
-    <div className="relative min-h-[85vh] bg-slate-950 text-white flex flex-col justify-center overflow-hidden">
+    <div className="relative min-h-[70vh] sm:min-h-[85vh] bg-slate-950 text-white flex flex-col justify-center overflow-hidden">
       
       {/* Background Layer: Slideshow or Solid Color */}
       {heroMode === "slideshow" && heroImages.length > 0 ? (
@@ -61,7 +61,7 @@ export default function HomePage() {
       )}
 
       {/* Hero Content */}
-      <div className="relative z-10 mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24 md:py-32 text-center space-y-4 sm:space-y-6">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-24 md:py-32 text-center space-y-4 sm:space-y-6">
         <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-orange-400">
           A Place Where Children Encounter God
         </span>
@@ -74,30 +74,19 @@ export default function HomePage() {
           The Refinery International is a children&apos;s ministry committed to raising children as lights and arrows, helping them encounter God, discover their identity in Christ, and grow into their purpose.
         </p>
 
-        <div className="pt-4 sm:pt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        {/* Streamlined Hero CTAs (2 primary buttons) */}
+        <div className="pt-3 sm:pt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
           <Link
             href="/programs"
-            className="rounded-2xl bg-orange-500 hover:bg-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition"
+            className="w-full sm:w-auto rounded-2xl bg-orange-500 hover:bg-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition text-center"
           >
             Explore The Refinery
           </Link>
           <Link
             href="/events"
-            className="rounded-2xl border border-orange-500/40 bg-slate-900/80 hover:bg-slate-900 px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold text-white transition"
+            className="w-full sm:w-auto rounded-2xl border border-orange-500/40 bg-slate-900/80 hover:bg-slate-900 px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold text-white transition text-center"
           >
             Upcoming Events
-          </Link>
-          <Link
-            href="/support"
-            className="rounded-2xl border border-slate-800 bg-slate-900/60 hover:bg-slate-900 px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold text-gray-200 transition"
-          >
-            Support Us
-          </Link>
-          <Link
-            href="/partner"
-            className="rounded-2xl bg-white hover:bg-gray-100 px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold text-slate-950 transition"
-          >
-            Partner With Us
           </Link>
         </div>
       </div>
