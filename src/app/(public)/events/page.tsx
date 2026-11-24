@@ -54,6 +54,10 @@ export default function Events() {
     });
   }
 
+  function isInternalLink(url: string) {
+    return url.startsWith("/");
+  }
+
   const featuredEvent = events.find((event) => event.featured) || events[0];
   const otherEvents = featuredEvent
     ? events.filter((event) => event.id !== featuredEvent.id)
@@ -97,7 +101,6 @@ export default function Events() {
             </div>
           ) : (
             <div className="grid gap-10 md:grid-cols-2 md:items-center">
-              {/* Event Image */}
               {featuredEvent.image ? (
                 <div className="h-80 overflow-hidden rounded-3xl bg-orange-100">
                   <img
@@ -112,7 +115,6 @@ export default function Events() {
                 </div>
               )}
 
-              {/* Event Details */}
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-orange-500">
                   Featured Event
@@ -126,7 +128,6 @@ export default function Events() {
                   {featuredEvent.description}
                 </p>
 
-                {/* Event Information */}
                 <div className="mt-6 space-y-3 text-gray-700 text-sm">
                   <p className="flex items-center gap-2">
                     <Calendar size={16} className="text-orange-500 shrink-0" />
@@ -153,16 +154,26 @@ export default function Events() {
                   )}
                 </div>
 
-                {/* Registration Button */}
                 {featuredEvent.registration_link && (
-                  <a
-                    href={featuredEvent.registration_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-8 inline-block rounded-full bg-orange-500 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-orange-600"
-                  >
-                    Register Now
-                  </a>
+                  isInternalLink(featuredEvent.registration_link) ? (
+                    <Link
+                      href={featuredEvent.registration_link}
+                      className="mt-8 inline-flex items-center gap-2 rounded-full bg-orange-500 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-orange-600"
+                    >
+                      <span>Register Now</span>
+                      <ArrowRight size={16} />
+                    </Link>
+                  ) : (
+                    <a
+                      href={featuredEvent.registration_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-8 inline-flex items-center gap-2 rounded-full bg-orange-500 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-orange-600"
+                    >
+                      <span>Register Now</span>
+                      <ArrowRight size={16} />
+                    </a>
+                  )
                 )}
               </div>
             </div>
@@ -234,15 +245,25 @@ export default function Events() {
 
                   {event.registration_link && (
                     <div className="p-6 pt-0">
-                      <a
-                        href={event.registration_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-sm text-orange-500 hover:text-orange-600"
-                      >
-                        <span>Register</span>
-                        <ArrowRight size={14} />
-                      </a>
+                      {isInternalLink(event.registration_link) ? (
+                        <Link
+                          href={event.registration_link}
+                          className="inline-flex items-center gap-1 font-semibold text-sm text-orange-500 hover:text-orange-600"
+                        >
+                          <span>Register</span>
+                          <ArrowRight size={14} />
+                        </Link>
+                      ) : (
+                        <a
+                          href={event.registration_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-semibold text-sm text-orange-500 hover:text-orange-600"
+                        >
+                          <span>Register</span>
+                          <ArrowRight size={14} />
+                        </a>
+                      )}
                     </div>
                   )}
                 </article>

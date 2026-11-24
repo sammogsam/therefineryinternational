@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   CalendarDays,
   CalendarCheck,
+  Tent,
   FileText,
   Users,
   UserPlus,
@@ -54,6 +55,11 @@ export default function Sidebar() {
       name: "Camp & Outreach Setup",
       href: "/admin/camp",
       icon: CalendarCheck,
+    },
+    {
+      name: "Camp Registrations",
+      href: "/admin/camp-registrations",
+      icon: Tent,
     },
     {
       name: "Create Team Form",
@@ -118,7 +124,8 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-1.5 p-5">
         {links.map((link) => {
           const Icon = link.icon;
-          const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+          const isActive =
+            pathname === link.href || pathname.startsWith(`${link.href}/`);
 
           return (
             <Link
