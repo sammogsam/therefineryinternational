@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const ITEMS_TO_BRING = [
   "Towel",
   "Pyjamas / Night gown / Cardigan",
@@ -24,6 +22,15 @@ const ITEMS_TO_BRING = [
 
 export async function POST(request: Request) {
   try {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "RESEND_API_KEY is not configured" },
+        { status: 500 }
+      );
+    }
+
+    const resend = new Resend(apiKey);
     const {
       primaryContactName,
       email,
@@ -67,7 +74,6 @@ export async function POST(request: Request) {
               (Total Attendees: <strong>${totalAttendees || 1}</strong>).
             </p>
 
-            <!-- Personal Registration Code -->
             <div style="margin: 24px 0; padding: 20px; border: 2px dashed #fdba74; background-color: #fff7ed; border-radius: 12px; text-align: center;">
               <p style="margin: 0; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #ea580c;">
                 Your Personal Registration Code
@@ -80,7 +86,6 @@ export async function POST(request: Request) {
               </p>
             </div>
 
-            <!-- Camp Opening & Venue Details -->
             <div style="margin-bottom: 24px; padding: 18px; background-color: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;">
               <h2 style="margin: 0 0 10px; font-size: 16px; color: #111827;">
                 Camp Schedule & Venue
@@ -99,7 +104,6 @@ export async function POST(request: Request) {
               </p>
             </div>
 
-            <!-- Materials Needed -->
             <div style="margin-bottom: 24px;">
               <h2 style="margin: 0 0 10px; font-size: 16px; color: #111827;">
                 Items to Bring to the Camp Meeting
