@@ -129,7 +129,7 @@ export default function CampRegistrationPage() {
       ? `Items to Bring to Camp Meeting (${assignedCode}):`
       : "Items to Bring to Camp Meeting:";
     const formattedList = `${header}\n${ITEMS_TO_BRING.map(
-      (item, index) => `${index + 1}.${item}`
+      (item, index) => `${index + 1}. ${item}`
     ).join("\n")}`;
     await navigator.clipboard.writeText(formattedList);
     setCopiedList(true);
@@ -200,9 +200,8 @@ export default function CampRegistrationPage() {
       details,
     });
 
-    setSubmitting(false);
-
     if (error) {
+      setSubmitting(false);
       console.error("Registration error:", error);
       setErrorMsg(
         "Unable to complete registration. Please check your details and try again."
@@ -210,6 +209,24 @@ export default function CampRegistrationPage() {
       return;
     }
 
+    // Send confirmation email with personal registration code, camp schedule, and items to bring
+    try {
+      await fetch("/api/send-camp-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          primaryContactName,
+          email,
+          category,
+          registrationCode: registration_code,
+          totalAttendees: total_attendees,
+        }),
+      });
+    } catch (emailErr) {
+      console.error("Confirmation email failed:", emailErr);
+    }
+
+    setSubmitting(false);
     setAssignedCode(registration_code);
     setSubmitted(true);
   }
@@ -899,47 +916,47 @@ export default function CampRegistrationPage() {
                           Industry / Sector
                         </label>
                         <input
+                          required
+                          value={industryOrSector}
+                          onChange={(e) => setIndustryOrSector(e.target.value)}
+                          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-orange-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Number of Representatives Attending
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
                         required
-                        value={industryOrSector}
-                        onChange={(e) => setIndustryOrSector(e.target.value)}
+                        value={staffCount}
+                        onChange={(e) => setStaffCount(Number(e.target.value))}
                         className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-orange-500 focus:outline-none"
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Number of Representatives Attending
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      required
-                      value={staffCount}
-                      onChange={(e) => setStaffCount(Number(e.target.value))}
-                      className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-orange-500 focus:outline-none"
-                    />
+                )}
+
+                {errorMsg && (
+                  <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                    {errorMsg}
                   </div>
-                </div>
-              )}
+                )}
 
-              {errorMsg && (
-                <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-                  {errorMsg}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full rounded-full bg-orange-500 py-3.5 font-semibold text-white shadow-md transition hover:bg-orange-600 disabled:opacity-50"
-              >
-                {submitting
-                  ? "Submitting Registration..."
-                  : "Complete Registration"}
-              </button>
-            </form>
-          </div>
-        )}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full rounded-full bg-orange-500 py-3.5 font-semibold text-white shadow-md transition hover:bg-orange-600 disabled:opacity-50"
+                >
+                  {submitting
+                    ? "Submitting Registration..."
+                    : "Complete Registration"}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </section>
     </main>
